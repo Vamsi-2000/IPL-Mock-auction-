@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IPL Mock Auction</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #1e1e2f;
+            color: #ffffff;
+            margin: 0;
+            padding: 0;
+        }
+        header {
+            background-color: #4a148c;
+            color: white;
+            padding: 10px;
+            font-size: 18px;
+            height: 3cm;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+    
+        }
+        main {
+            margin: 20px;
+            width: 90%; /* Adjusted to ensure it is responsive */
+            max-width: 1200px; 
+        }
+        form {
+            background: #2c2c3e;
+            padding: 20px;
+            border-radius: 10px;
+            width: 50%;
+            margin: auto;
+        }
+        label, input, select, button {
+            display: block;
+            margin: 10px auto;
+            color: white;
+        }
+        select, input {
+            width: 100%;
+            padding: 8px;
+            background-color: #3a3a4f;
+            color: white;
+            border: 1px solid #6a1b9a;
+            border-radius: 5px;
+        }
+        table {
+            width: 90%;
+            margin: 20px auto;
+            border-collapse: collapse;
+            background: #2c2c3e;
+            color: white;
+        }
+        th, td {
+            padding: 10px;
+            border: 1px solid #ddd;
+            text-align: center;
+        }
+        th {
+            background-color: #6a1b9a;
+        }
+        button {
+            background-color: #6a1b9a;
+            color: white;
+            border: none;
+            padding: 10px;
+            cursor: pointer;
+        }
+        .foreign-player::after {
+            content: " ✈";
+        }
+        .table-container {
+            margin-top: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-around;
+        }
+        .table-wrapper {
+            width: 30%;
+            margin: 10px;
+            background-color: #2c2c3e;
+            border-radius: 10px;
+            padding: 10px;
+        }
+        .table-wrapper h3 {
+            background-color: #6a1b9a;
+            padding: 10px;
+            text-align: center;
+            margin-top: 0;
+        }
+        .team-summary {
+            width: 100%;
+            margin-top: 30px;
+            text-align: center;
+            background-color: #2c2c3e;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .team-summary table {
+            width: 100%;
+            color: white;
+            background-color: #3a3a4f;
+        }
+        .team-summary th, .team-summary td {
+            text-align: left;
+        }
+        #auctioneers {
+        background-color: #6a1b9a;
+        padding: 10px;
+        border-radius: 5px;
+        font-size: 18px;
+        color: white;
+        animation: fadeIn 5s infinite;
+    }
+
+    @keyframes fadeIn {
+        0% { opacity: 0; }
+        50% { opacity: 1; }
+        100% { opacity: 0; }
+    }
+    </style>
+</head>
+<body>
+    <header>
+        <button onclick="finishAuction()">Finish Auction</button>
+        <h1>IPL Mock Auction</h1>
+        <div id="auctioneers" style="color: #ffffff; font-size: 14px; animation: fadeIn 5s infinite;">
+            Auctioneers: Vamsi & Rhoit Reddy
+        </div>
+    </header>
+    <main>
+        <section id="auction">
+            <h2>Auction Panel</h2>
+            <form id="auctionForm">
+                <label for="playerName">Player Name:</label>
+                <input type="text" id="playerName" required>
+
+                <label for="team">Select Team:</label>
+                <select id="team">
+                    <option value="MI">Mumbai Indians</option>
+                    <option value="CSK">Chennai Super Kings</option>
+                    <option value="RCB">Royal Challengers Bangalore</option>
+                    <option value="KKR">Kolkata Knight Riders</option>
+                    <option value="SRH">Sunrisers Hyderabad</option>
+                    <option value="DC">Delhi Capitals</option>
+                    <option value="RR">Rajasthan Royals</option>
+                    <option value="PBKS">Punjab Kings</option>
+                    <option value="GT">Gujarat Titans</option>
+                    <option value="LSG">Lucknow Super Giants</option>
+                </select>
+
+                <label for="price">Price (in INR Crores):</label>
+                <input type="number" id="price" step="0.01" required>
+
+                <label for="role">Player Role:</label>
+                <select id="role">
+                    <option value="Batsman">Batsman</option>
+                    <option value="Bowler">Bowler</option>
+                    <option value="All-Rounder">All-Rounder</option>
+                    <option value="Wicketkeeper Batsman">Wicketkeeper Batsman</option>
+                </select>
+
+                <label>
+                    <input type="checkbox" id="foreignPlayer"> Foreign Player
+                </label>
+
+                <label for="captain">Captain/Vice-Captain:</label>
+                <select id="captain">
+                    <option value="None">None</option>
+                    <option value="Captain">Captain</option>
+                    <option value="Vice-Captain">Vice-Captain</option>
+                </select>
+
+                <label>
+                    <input type="checkbox" id="rtmPlayer"> RTM Player (Right to Match)
+                </label>
+
+                <button type="submit">Save Player</button>
+            </form>
+        </section>
+
+        <section id="teamSummary">
+            <h2>Team Spending Summary</h2>
+            <div class="team-summary">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Franchise</th>
+                            <th>Owner</th>
+                            <th>Total Spent</th>
+                            <th>Remaining Purse</th>
+                            <th>Players Count</th>
+                            <th>Indian Players</th>
+                            <th>Foreign Players</th>
+                            <th>RTM Players</th>
+                        </tr>
+                    </thead>
+                    <tbody id="teamSummaryTable"></tbody>
+                </table>
+            </div>
+        </section>
+
+        <section id="playerList">
+            <h2>Player List</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Player Name</th>
+                        <th>Team</th>
+                        <th>Price (INR Cr)</th>
+                        <th>Role</th>
+                        <th>Captain/Vice-Captain</th>
+                        <th>RTM</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="playersTable"></tbody>
+            </table>
+        </section>
+
+        <section id="saveData">
+            <button onclick="saveData()">Save Data and Open New Tab</button>
+            <button onclick="saveToExcel()">Save Data to Excel</button>
+        </section>
+
+        <section id="franchiseTables" class="table-container"></section>
+    </main>
+
+    <script>
+        const initialPurse = 120;
+        let playersData = JSON.parse(localStorage.getItem("players")) || [];
+        let teamPurse = {};
+        let teamRTM = {}; // RTM tracking for teams
+        let teamOwners = {
+            "MI": "fanofp007",
+            "CSK": "NithinNTRfan_09",
+            "RCB": "ysnkiran_77",
+            "KKR": "itsrolexsir",
+            "SRH": "kiranmsdian_07",
+            "DC": "saakethvarama",
+            "RR": "vivadvar3921",
+            "PBKS": "Uttam Samapanth78",
+            "GT": "SalaarStanhk",
+            "LSG": "kumaran4ntr"
+        };
+
+        function displayPlayers() {
+            const playersTable = document.getElementById("playersTable");
+            playersTable.innerHTML = "";
+            updatePurse();
+            playersData.forEach(player => {
+                let rtmStatus = player.rtmPlayer ? "Yes" : "No";
+                let row = `<tr>
+                    <td>${player.playerName}${player.foreignPlayer ? " ✈" : ""}</td>
+                    <td>${player.team}</td>
+                    <td>${player.price}</td>
+                    <td>${player.role}</td>
+                    <td>${player.captain}</td>
+                    <td>${rtmStatus}</td>
+                    <td>
+                        <button onclick="editPlayer(${playersData.indexOf(player)})">Edit</button>
+                        <button onclick="deletePlayer(${playersData.indexOf(player)})">Delete</button>
+                    </td>
+                </tr>`;
+                playersTable.innerHTML += row;
+            });
+            updateTeamSummary();
+        }
+
+        function updatePurse() {
+            playersData.forEach(player => {
+                if (!teamPurse[player.team]) {
+                    teamPurse[player.team] = initialPurse;
+                }
+                teamPurse[player.team] -= parseFloat(player.price);
+            });
+        }
+
+        function updateTeamSummary() {
+            const teamSummaryTable = document.getElementById("teamSummaryTable");
+            teamSummaryTable.innerHTML = "";
+
+            Object.keys(teamOwners).forEach(team => {
+                const totalSpent = playersData
+                    .filter(player => player.team === team)
+                    .reduce((acc, player) => acc + parseFloat(player.price), 0);
+                const remainingPurse = (initialPurse - totalSpent).toFixed(2);
+                const playersCount = playersData.filter(player => player.team === team).length;
+                const indianPlayers = playersData.filter(player => player.team === team && !player.foreignPlayer).length;
+                const foreignPlayers = playersData.filter(player => player.team === team && player.foreignPlayer).length;
+                const rtmPlayers = playersData.filter(player => player.team === team && player.rtmPlayer).length;
+
+                let row = `<tr>
+                    <td>${team}</td>
+                    <td>${teamOwners[team]}</td>
+                    <td>${totalSpent.toFixed(2)}</td>
+                    <td>${remainingPurse}</td>
+                    <td>${playersCount}</td>
+                    <td>${indianPlayers}</td>
+                    <td>${foreignPlayers}</td>
+                    <td>${rtmPlayers}</td>
+                </tr>`;
+                teamSummaryTable.innerHTML += row;
+            });
+        }
+
+        document.getElementById("auctionForm").addEventListener("submit", function (event) {
+            event.preventDefault();
+            let player = {
+                playerName: document.getElementById("playerName").value,
+                team: document.getElementById("team").value,
+                price: parseFloat(document.getElementById("price").value).toFixed(2),
+                role: document.getElementById("role").value,
+                captain: document.getElementById("captain").value,
+                foreignPlayer: document.getElementById("foreignPlayer").checked,
+                rtmPlayer: document.getElementById("rtmPlayer").checked
+            };
+
+            // Check if team has already used 2 RTM
+            if (player.rtmPlayer) {
+                if (!teamRTM[player.team]) {
+                    teamRTM[player.team] = 0;
+                }
+
+                if (teamRTM[player.team] >= 2) {
+                    alert("This team has already used 2 RTMs.");
+                    return;
+                }
+
+                teamRTM[player.team]++;
+            }
+
+            playersData.push(player);
+            localStorage.setItem("players", JSON.stringify(playersData));
+            displayPlayers();
+            this.reset();
+        });
+
+        function saveData() {
+            const franchiseTables = document.getElementById("franchiseTables");
+            franchiseTables.innerHTML = "";
+            const teams = Object.keys(teamOwners);
+
+            teams.forEach(team => {
+                let filteredPlayers = playersData.filter(player => player.team === team);
+                filteredPlayers.sort((a, b) => b.price - a.price);
+                
+                let tableHTML = `<div class="table-wrapper">
+                                    <h3>${team} - ${teamOwners[team]}</h3>
+                                    <table>
+                                        <thead>
+                                            <tr>
+                                                <th>Player Name</th>
+                                                <th>Price (INR Cr)</th>
+                                                <th>Role</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>`; 
+                filteredPlayers.forEach(player => {
+                    tableHTML += `<tr>
+                                    <td>${player.playerName}</td>
+                                    <td>${player.price}</td>
+                                    <td>${player.role}</td>
+                                  </tr>`; 
+                });
+
+                tableHTML += `</tbody></table></div>`;
+                franchiseTables.innerHTML += tableHTML;
+            });
+
+            window.open('', '_blank').document.write(franchiseTables.innerHTML);
+        }
+
+       /* function saveToExcel() {
+            const teams = Object.keys(teamOwners);
+            const wb = XLSX.utils.book_new();
+
+            teams.forEach(team => {
+                let filteredPlayers = playersData.filter(player => player.team === team);
+                filteredPlayers.sort((a, b) => b.price - a.price);
+                
+                let ws_data = [
+                    ["Player Name", "Price (INR Cr)", "Role"]
+                ];
+
+                filteredPlayers.forEach(player => {
+                    ws_data.push([player.playerName, player.price, player.role]);
+                });
+
+                let ws = XLSX.utils.aoa_to_sheet(ws_data);
+                XLSX.utils.book_append_sheet(wb, ws, team);
+            });
+
+            XLSX.writeFile(wb, "IPL_Mock_Auction.xlsx");
+        }*/
+
+        function editPlayer(index) {
+            let player = playersData[index];
+            document.getElementById("playerName").value = player.playerName;
+            document.getElementById("team").value = player.team;
+            document.getElementById("price").value = player.price;
+            document.getElementById("role").value = player.role;
+            document.getElementById("captain").value = player.captain;
+            document.getElementById("foreignPlayer").checked = player.foreignPlayer;
+            document.getElementById("rtmPlayer").checked = player.rtmPlayer;
+
+            playersData.splice(index, 1);
+            localStorage.setItem("players", JSON.stringify(playersData));
+            displayPlayers();
+        }
+
+        function deletePlayer(index) {
+            playersData.splice(index, 1);
+            localStorage.setItem("players", JSON.stringify(playersData));
+            displayPlayers();
+        }
+
+        function toggleDarkMode() {
+            document.body.classList.toggle('dark-mode');
+        }
+
+        function finishAuction() {
+            alert("Auction Finished!");
+        }
+
+        displayPlayers();
+        function editPlayer(index) {
+    const password = prompt("Enter password to edit:");
+    if (password === "vamsi123") {
+        let player = playersData[index];
+        document.getElementById("playerName").value = player.playerName;
+        document.getElementById("team").value = player.team;
+        document.getElementById("price").value = player.price;
+        document.getElementById("role").value = player.role;
+        document.getElementById("captain").value = player.captain;
+        document.getElementById("foreignPlayer").checked = player.foreignPlayer;
+        document.getElementById("rtmPlayer").checked = player.rtmPlayer;
+
+        playersData.splice(index, 1);
+        localStorage.setItem("players", JSON.stringify(playersData));
+        displayPlayers();
+    } else {
+        alert("Incorrect password! You are not authorized to edit.");
+    }
+}
+
+function deletePlayer(index) {
+    const password = prompt("Enter password to delete:");
+    if (password === "vamsi123") {
+        playersData.splice(index, 1);
+        localStorage.setItem("players", JSON.stringify(playersData));
+        displayPlayers();
+    } else {
+        alert("Incorrect password! You are not authorized to delete.");
+    }
+}
+function saveToExcel() {
+    const teams = Object.keys(teamOwners);
+    const wb = XLSX.utils.book_new();
+
+    // Iterate through all teams to prepare data
+    teams.forEach(team => {
+        let filteredPlayers = playersData.filter(player => player.team === team);
+        
+        // Check if there are any players for the current team
+        if (filteredPlayers.length > 0) {
+            filteredPlayers.sort((a, b) => b.price - a.price); // Sort players by price
+            
+            let ws_data = [
+                ["Player Name", "Price (INR Cr)", "Role"]
+            ];
+
+            // Add player data to the sheet
+            filteredPlayers.forEach(player => {
+                ws_data.push([player.playerName, player.price, player.role]);
+            });
+
+            // Create a worksheet from the data
+            let ws = XLSX.utils.aoa_to_sheet(ws_data);
+
+            // Append the worksheet to the workbook
+            XLSX.utils.book_append_sheet(wb, ws, team);
+        }
+    });
+
+    // Write the workbook to a file
+    XLSX.writeFile(wb, "IPL_Mock_Auction.xlsx");
+}
+
+    </script>
+</body>
+</html>
